@@ -15,7 +15,9 @@ services:
       - "4317:4317" # OTLP gRPC receiver
       - "4318:4318" # OTLP http receiver
       - "55679:55679" # zpages extension
-
+    depends_on:
+      - jaeger-all-in-one
+      - zipkin-all-in-one
 
   prometheus:
     container_name: prometheus
@@ -28,9 +30,20 @@ services:
     ports:
       - "9090:9090"
 
+  tempo:
+    image: grafana/tempo:latest
+    command: [ "-config.file=/etc/tempo.yml" ]
+    volumes:
+      - ./docker/tempo/tempo.yml:/etc/tempo.yml
+    ports:
+      - "3200:3200"   # tempo
+      - "4317"  # otlp grpc
+
   grafana:
     container_name: grafana
     image: grafana/grafana
+    volumes:
+      - ./docker/grafana/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
     ports:
       - "3000:3000"
 
