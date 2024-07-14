@@ -1,7 +1,6 @@
 package com.rafaa;
 
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Timer;
+import io.micrometer.core.annotation.Timed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
@@ -36,11 +35,11 @@ public class ObservabilityApplication {
 
 		private static final Logger LOGGER = LoggerFactory.getLogger(HelloController.class);
 		private final RestTemplate restTemplate;
-		private final Timer doSleepTimer;
+		private final SleepService sleepService;
 
-		HelloController(RestTemplate restTemplate, MeterRegistry meterRegistry) {
+		HelloController(RestTemplate restTemplate, SleepService sleepService) {
 			this.restTemplate = restTemplate;
-			this.doSleepTimer = meterRegistry.timer("do_sleep_method_timed");
+            this.sleepService = sleepService;
         }
 
 		@GetMapping("/hello")
@@ -53,18 +52,10 @@ public class ObservabilityApplication {
 
 		@GetMapping("/sleep")
 		public Long sleep(@RequestParam Long ms) {
-			Long result = this.doSleepTimer.record(() -> this.doSleep(ms));
+			Long result = this.sleepService.doSleep(ms);
 			return result;
 		}
 
-		public Long doSleep(Long ms) {
-			try {
-				TimeUnit.MILLISECONDS.sleep(ms);
-			} catch (InterruptedException e) {
-				throw new RuntimeException(e);
-			}
-			return ms;
-		}
 
 		@GetMapping("/exception")
 		public String exception() {
@@ -75,6 +66,21 @@ public class ObservabilityApplication {
 		protected ResponseEntity<String> handleConflict(IllegalArgumentException ex) {
 			LOGGER.error(ex.getMessage(), ex);
 			return ResponseEntity.badRequest().body(ex.getMessage());
+		}
+
+	}
+
+	@Service
+	class SleepService{
+
+		@Timed(value = "do_sleep_method_timed")
+		public Long doSleep(Long ms) {
+			try {
+				TimeUnit.MILLISECONDS.sleep(ms);
+			} catch (InterruptedException e) {
+				throw new RuntimeException(e);
+			}
+			return ms;
 		}
 
 	}
