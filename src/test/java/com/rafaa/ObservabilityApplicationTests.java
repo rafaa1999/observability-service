@@ -9,5 +9,4 @@ class ObservabilityApplicationTests {
 	@Test
 	void contextLoads() {
 	}
-
 }
