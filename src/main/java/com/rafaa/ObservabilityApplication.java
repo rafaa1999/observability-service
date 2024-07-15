@@ -1,6 +1,9 @@
 package com.rafaa;
 
 import io.micrometer.core.annotation.Timed;
+import io.micrometer.tracing.Span;
+import io.micrometer.tracing.Tracer;
+import io.micrometer.tracing.annotation.NewSpan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
@@ -56,7 +59,6 @@ public class ObservabilityApplication {
 			return result;
 		}
 
-
 		@GetMapping("/exception")
 		public String exception() {
 			throw new IllegalArgumentException("This id is invalid");
@@ -74,6 +76,7 @@ public class ObservabilityApplication {
 	class SleepService{
 
 		@Timed(value = "do_sleep_method_timed")
+		@NewSpan("do-sleep-method-span")
 		public Long doSleep(Long ms) {
 			try {
 				TimeUnit.MILLISECONDS.sleep(ms);
